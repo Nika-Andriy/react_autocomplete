@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.scss';
 import { peopleFromServer } from './data/people';
 
@@ -18,7 +18,6 @@ export const App: React.FC<Props> = ({ debounceDelay = 300, onSelected }) => {
   const [suggestions, setSuggestions] = useState<Person[]>(peopleFromServer);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const isSelectingRef = useRef(false);
 
   const filteredPeople = (value: string) => {
     const q = value.trim().toLowerCase();
@@ -35,11 +34,8 @@ export const App: React.FC<Props> = ({ debounceDelay = 300, onSelected }) => {
   const showTitle = ({ name, born, died }: Person) =>
     `${name} (${born} - ${died})`;
 
+  // ✅ debounce + filtering (SINGLE SOURCE OF TRUTH)
   useEffect(() => {
-    if (isSelectingRef.current) {
-      return;
-    }
-
     const timer = setTimeout(() => {
       setSuggestions(filteredPeople(query));
     }, debounceDelay);
@@ -87,6 +83,7 @@ export const App: React.FC<Props> = ({ debounceDelay = 300, onSelected }) => {
                     setSelectedPerson(person);
                     setQuery(person.name);
                     setIsOpen(false);
+
                     onSelected?.(person);
                   }}
                 >
@@ -100,11 +97,12 @@ export const App: React.FC<Props> = ({ debounceDelay = 300, onSelected }) => {
         {suggestions.length === 0 && (
           <div
             className="
-            notification
-            is-danger
-            is-light
-            mt-3
-            is-align-self-flex-start"
+              notification
+              is-danger
+              is-light
+              mt-3
+              is-align-self-flex-start
+            "
             role="alert"
             data-cy="no-suggestions-message"
           >
